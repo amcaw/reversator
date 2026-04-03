@@ -1,18 +1,11 @@
 <script lang="ts">
-	let { value = $bindable(''), onsubmit }: { value: string; onsubmit?: () => void } = $props();
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Enter') {
-			onsubmit?.();
-		}
-	}
+	let { value = $bindable('') }: { value: string } = $props();
 
 	function handleDrop(e: DragEvent) {
 		e.preventDefault();
 		const url = e.dataTransfer?.getData('text/uri-list') || e.dataTransfer?.getData('text/plain') || '';
 		if (url) {
 			value = url.trim();
-			onsubmit?.();
 		}
 	}
 
@@ -31,7 +24,6 @@
 			type="url"
 			bind:value
 			placeholder="https://example.com/image.jpg"
-			onkeydown={handleKeydown}
 			aria-label="URL de l'image"
 		/>
 	</div>

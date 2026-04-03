@@ -7,20 +7,18 @@ export interface LaunchResult {
 
 /**
  * Opens reverse image search tabs for the given engines.
- * Returns which engines opened successfully vs were blocked by popup blocker.
+ * All window.open() calls are synchronous within the same call stack
+ * to maximize the chance browsers treat them as a single user gesture.
+ * The 'noopener,noreferrer' features detach the opened tabs for security.
  */
 export function launchSearches(imageUrl: string, selectedEngines: Engine[]): LaunchResult {
 	const opened: string[] = [];
 	const blocked: string[] = [];
 
 	for (const engine of selectedEngines) {
-		const searchUrl = engine.buildUrl(imageUrl);
-		const win = window.open(searchUrl, '_blank');
-		if (win) {
-			opened.push(engine.id);
-		} else {
-			blocked.push(engine.id);
-		}
+		const url = engine.buildUrl(imageUrl);
+		const win = window.open(url, '_blank', 'noopener,noreferrer');
+		(win ? opened : blocked).push(engine.id);
 	}
 
 	return { opened, blocked };

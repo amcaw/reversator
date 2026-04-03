@@ -41,28 +41,26 @@
 <style>
 	.preview {
 		width: 100%;
+		aspect-ratio: 16 / 9;
 		border-radius: var(--radius-md);
 		overflow: hidden;
 		background: var(--surface);
-		border: 2px dashed var(--border);
-		min-height: 48px;
+		border: 2px solid var(--border-light);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.25s;
+		transition: border-color 0.25s;
 	}
 
 	.preview.has-image {
-		border: none;
-		box-shadow: var(--shadow-md);
+		border-color: var(--accent);
 	}
 
 	img {
 		display: none;
 		width: 100%;
-		max-height: 360px;
+		height: 100%;
 		object-fit: contain;
-		background: var(--surface);
 	}
 
 	img.visible {

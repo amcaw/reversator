@@ -1,15 +1,9 @@
 <script lang="ts">
 	import UrlInput from '$lib/UrlInput.svelte';
 	import ImagePreview from '$lib/ImagePreview.svelte';
-	import EngineSelector from '$lib/EngineSelector.svelte';
 	import { engines } from '$lib/engines';
-	import { launchSearches, buildSearchLinks } from '$lib/search-launcher';
 
 	let imageUrl = $state('');
-	let selectedEngineIds = $state<string[]>([]);
-
-	let searchResult = $state<{ opened: number; blocked: number } | null>(null);
-	let fallbackLinks = $state<{ engine: { id: string; name: string; logo: string }; url: string }[]>([]);
 
 	let isValidUrl = $derived(() => {
 		try {
@@ -20,314 +14,241 @@
 		}
 	});
 
-	let selectedEngines = $derived(
-		engines.filter((e) => selectedEngineIds.includes(e.id))
-	);
+	let ready = $derived(isValidUrl());
 
-	let canSearch = $derived(isValidUrl() && selectedEngines.length > 0);
+	function openEngine(engineId: string) {
+		const engine = engines.find((e) => e.id === engineId);
+		if (!engine || !ready) return;
+		window.open(engine.buildUrl(imageUrl), '_blank', 'noopener,noreferrer');
+	}
 
-	function handleSearch() {
-		if (!canSearch) return;
-
-		searchResult = null;
-		fallbackLinks = [];
-
-		const result = launchSearches(imageUrl, selectedEngines);
-
-		searchResult = {
-			opened: result.opened.length,
-			blocked: result.blocked.length
-		};
-
-		if (result.blocked.length > 0) {
-			const blockedEngines = engines.filter((e) => result.blocked.includes(e.id));
-			fallbackLinks = buildSearchLinks(imageUrl, blockedEngines);
+	function openAll() {
+		if (!ready) return;
+		for (const engine of engines) {
+			window.open(engine.buildUrl(imageUrl), '_blank', 'noopener,noreferrer');
 		}
 	}
 
 	function reset() {
 		imageUrl = '';
-		searchResult = null;
-		fallbackLinks = [];
 	}
 </script>
 
 <div class="widget">
-	<header>
-		<div class="title-row">
-			<div class="logo-mark">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<circle cx="11" cy="11" r="8"></circle>
-					<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+
+	<p class="instruction">Collez l'URL d'une image publique, puis lancez la recherche sur chaque moteur.</p>
+
+	<UrlInput bind:value={imageUrl} />
+
+	<div class="preview-area">
+		{#if imageUrl && ready}
+			<ImagePreview url={imageUrl} />
+		{:else}
+			<div class="preview-placeholder">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+					<circle cx="8.5" cy="8.5" r="1.5"></circle>
+					<polyline points="21 15 16 10 5 21"></polyline>
 				</svg>
+				<span>Aperçu de l'image</span>
 			</div>
-			<div>
-				<h1>Reversator</h1>
-				<p class="tagline">Recherche d'image inversée multi-moteurs</p>
+		{/if}
+	</div>
+
+	<div class="engines" class:disabled={!ready}>
+		<div class="engines-header">
+			<h2>Voir les résultats sur</h2>
+			<div class="engines-actions">
+				{#if imageUrl}
+					<button class="text-btn" onclick={reset}>Effacer</button>
+					<span class="sep">·</span>
+				{/if}
+				<button class="text-btn accent" onclick={openAll} disabled={!ready}>Tout ouvrir</button>
 			</div>
 		</div>
-	</header>
 
-	<section class="section">
-		<p class="instruction">Collez l'URL d'une image publique, sélectionnez vos moteurs et lancez la recherche. Aucune donnée n'est stockée.</p>
-		<UrlInput bind:value={imageUrl} onsubmit={handleSearch} />
-	</section>
-
-	{#if imageUrl}
-		<section class="section">
-			<ImagePreview url={imageUrl} />
-		</section>
-	{/if}
-
-	<section class="section">
-		<EngineSelector bind:selected={selectedEngineIds} />
-	</section>
-
-	<section class="actions">
-		<button class="search-btn" onclick={handleSearch} disabled={!canSearch}>
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="11" cy="11" r="8"></circle>
-				<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-			</svg>
-			Rechercher sur {selectedEngines.length} moteur{selectedEngines.length !== 1 ? 's' : ''}
-		</button>
-
-		{#if imageUrl}
-			<button class="clear-btn" onclick={reset}>Effacer</button>
-		{/if}
-	</section>
-
-	{#if searchResult}
-		<section class="section">
-			{#if searchResult.opened > 0}
-				<div class="result result-success">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<polyline points="20 6 9 17 4 12"></polyline>
+		<div class="engine-grid">
+			{#each engines as engine (engine.id)}
+				<button class="engine-card" onclick={() => openEngine(engine.id)} disabled={!ready}>
+					<img class="engine-logo" src={engine.logo} alt={engine.name} />
+					<span class="engine-name">{engine.name}</span>
+					<svg class="open-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+						<polyline points="15 3 21 3 21 9"></polyline>
+						<line x1="10" y1="14" x2="21" y2="3"></line>
 					</svg>
-					{searchResult.opened} onglet{searchResult.opened !== 1 ? 's' : ''} ouvert{searchResult.opened !== 1 ? 's' : ''}
-				</div>
-			{/if}
-
-			{#if searchResult.blocked > 0}
-				<div class="result result-blocked">
-					<div class="blocked-header">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<circle cx="12" cy="12" r="10"></circle>
-							<line x1="12" y1="8" x2="12" y2="12"></line>
-							<line x1="12" y1="16" x2="12.01" y2="16"></line>
-						</svg>
-						<span>
-							{searchResult.blocked} onglet{searchResult.blocked !== 1 ? 's' : ''} bloqué{searchResult.blocked !== 1 ? 's' : ''} par votre navigateur. Cliquez ci-dessous :
-						</span>
-					</div>
-					<ul class="fallback-links">
-						{#each fallbackLinks as link (link.engine.id)}
-							<li>
-								<a href={link.url} target="_blank" rel="noopener noreferrer">
-									<img src={link.engine.logo} alt="{link.engine.name}" class="fallback-logo" />
-									{link.engine.name}
-									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-										<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-										<polyline points="15 3 21 3 21 9"></polyline>
-										<line x1="10" y1="14" x2="21" y2="3"></line>
-									</svg>
-								</a>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/if}
-		</section>
-	{/if}
+				</button>
+			{/each}
+		</div>
+	</div>
 </div>
 
 <style>
 	.widget {
-		max-width: 540px;
+		max-width: 480px;
 		margin: 0 auto;
-		padding: 28px 24px 36px;
-	}
-
-	header {
-		margin-bottom: 24px;
-	}
-
-	.title-row {
+		padding: 16px 16px 20px;
 		display: flex;
-		align-items: center;
-		gap: 14px;
-	}
-
-	.logo-mark {
-		width: 44px;
-		height: 44px;
-		border-radius: var(--radius-md);
-		background: var(--accent);
-		color: var(--accent-text);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-
-	h1 {
-		font-size: 22px;
-		font-weight: 700;
-		color: var(--text);
-		margin: 0;
-		letter-spacing: -0.02em;
-		line-height: 1.2;
-	}
-
-	.tagline {
-		font-size: 13px;
-		font-weight: 500;
-		color: var(--text-muted);
-		margin: 2px 0 0;
-	}
-
-	.section {
-		margin-bottom: 20px;
+		flex-direction: column;
+		gap: 10px;
 	}
 
 	.instruction {
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 400;
 		color: var(--text-secondary);
-		margin: 0 0 12px;
-		line-height: 1.6;
+		margin: 0;
+		line-height: 1.5;
 	}
 
-	.actions {
-		display: flex;
-		gap: 10px;
-		margin-bottom: 20px;
+	/* Preview */
+	.preview-area {
+		aspect-ratio: 16 / 9;
 	}
 
-	.search-btn {
-		flex: 1;
+	.preview-placeholder {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 8px;
-		padding: 13px 24px;
-		font-family: inherit;
-		font-size: 14px;
-		font-weight: 700;
-		background: var(--accent);
-		color: var(--accent-text);
-		border: none;
+		gap: 6px;
+		height: 100%;
+		border: 2px dashed var(--border);
 		border-radius: var(--radius-md);
-		cursor: pointer;
-		transition: all 0.15s;
-		letter-spacing: 0.01em;
+		color: var(--text-muted);
 	}
 
-	.search-btn:hover:not(:disabled) {
-		background: var(--accent-hover);
-		box-shadow: var(--shadow-md);
+	.preview-placeholder span {
+		font-size: 11px;
+		font-weight: 500;
 	}
 
-	.search-btn:active:not(:disabled) {
-		transform: scale(0.98);
+	/* Engines */
+	.engines {
+		transition: opacity 0.2s;
 	}
 
-	.search-btn:disabled {
+	.engines.disabled {
 		opacity: 0.35;
-		cursor: not-allowed;
+		pointer-events: none;
 	}
 
-	.clear-btn {
-		padding: 13px 20px;
+	.engines-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 6px;
+	}
+
+	h2 {
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--text-muted);
+		margin: 0;
+	}
+
+	.engines-actions {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.text-btn {
+		background: none;
+		border: none;
 		font-family: inherit;
-		font-size: 13px;
+		font-size: 11px;
 		font-weight: 600;
-		background: var(--surface);
-		color: var(--text-secondary);
-		border: 2px solid var(--border);
-		border-radius: var(--radius-md);
+		color: var(--text-muted);
 		cursor: pointer;
+		padding: 2px 4px;
+		border-radius: var(--radius-sm);
 		transition: all 0.15s;
 	}
 
-	.clear-btn:hover {
-		border-color: var(--text-muted);
+	.text-btn:hover:not(:disabled) {
 		color: var(--text);
 	}
 
-	.clear-btn:active {
-		transform: scale(0.97);
+	.text-btn.accent {
+		color: var(--accent);
 	}
 
-	.result {
-		padding: 14px 16px;
-		border-radius: var(--radius-md);
-		font-size: 13px;
-		font-weight: 600;
+	.text-btn.accent:hover:not(:disabled) {
+		background: var(--accent-light);
 	}
 
-	.result-success {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		background: var(--success-light);
-		color: var(--success);
+	.text-btn:disabled {
+		cursor: not-allowed;
 	}
 
-	.result-blocked {
-		background: var(--surface);
-		border: 1px solid var(--border-light);
-		margin-top: 8px;
-	}
-
-	.blocked-header {
-		display: flex;
-		align-items: flex-start;
-		gap: 8px;
+	.sep {
 		color: var(--text-muted);
-		font-weight: 500;
-		margin-bottom: 10px;
+		font-size: 10px;
 	}
 
-	.blocked-header svg {
-		flex-shrink: 0;
-		margin-top: 1px;
-	}
-
-	.fallback-links {
-		list-style: none;
-		padding: 0;
-		margin: 0;
+	/* Engine grid — 2 columns on wide, 1 on narrow */
+	.engine-grid {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
 	}
 
-	.fallback-links a {
+	.engine-card {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 8px;
 		padding: 8px 10px;
+		border: 1.5px solid var(--border-light);
 		border-radius: var(--radius-sm);
-		color: var(--accent);
-		text-decoration: none;
-		font-size: 13px;
-		font-weight: 600;
-		transition: background 0.15s;
+		background: var(--bg);
+		cursor: pointer;
+		transition: all 0.15s;
+		font-family: inherit;
+		text-align: left;
+		width: 100%;
 	}
 
-	.fallback-links a:hover {
+	.engine-card:hover:not(:disabled) {
+		border-color: var(--accent);
 		background: var(--accent-light);
 	}
 
-	.fallback-links a svg {
-		margin-left: auto;
-		opacity: 0.5;
+	.engine-card:active:not(:disabled) {
+		transform: scale(0.98);
 	}
 
-	.fallback-logo {
+	.engine-card:disabled {
+		cursor: not-allowed;
+	}
+
+	.engine-logo {
 		width: 18px;
 		height: 18px;
+		flex-shrink: 0;
 		object-fit: contain;
 	}
+
+	.engine-name {
+		flex: 1;
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.open-icon {
+		color: var(--text-muted);
+		flex-shrink: 0;
+		transition: color 0.15s;
+	}
+
+	.engine-card:hover:not(:disabled) .open-icon {
+		color: var(--accent);
+	}
+
 </style>

@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#4285F4"/>
-  <path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10" fill="#34A853" opacity="0.9"/>
-  <path d="M12 22C6.48 22 2 17.52 2 12" fill="#FBBC05" opacity="0.9"/>
-  <path d="M2 12C2 6.48 6.48 2 12 2" fill="#EA4335" opacity="0.9"/>
-  <polyline points="8 12.5 11 15.5 16.5 9" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
