@@ -1,30 +1,23 @@
 <script lang="ts">
 	import { engines } from './engines';
-	import { browser } from '$app/environment';
 
 	let { selected = $bindable<string[]>([]) }: { selected: string[] } = $props();
 
 	const STORAGE_KEY = 'reversator-engines';
 
-	if (browser) {
-		try {
-			const stored = localStorage.getItem(STORAGE_KEY);
-			if (stored) {
-				selected = JSON.parse(stored);
-			} else {
-				selected = engines.filter((e) => e.enabledByDefault).map((e) => e.id);
-			}
-		} catch {
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		if (stored) {
+			selected = JSON.parse(stored);
+		} else {
 			selected = engines.filter((e) => e.enabledByDefault).map((e) => e.id);
 		}
-	} else {
+	} catch {
 		selected = engines.filter((e) => e.enabledByDefault).map((e) => e.id);
 	}
 
 	$effect(() => {
-		if (browser) {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(selected));
-		}
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(selected));
 	});
 
 	function toggle(id: string) {

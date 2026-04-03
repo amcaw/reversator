@@ -1,9 +1,12 @@
 <script lang="ts">
-	import UrlInput from '$lib/UrlInput.svelte';
-	import ImagePreview from '$lib/ImagePreview.svelte';
-	import EngineSelector from '$lib/EngineSelector.svelte';
-	import { engines } from '$lib/engines';
-	import { launchSearches, buildSearchLinks } from '$lib/search-launcher';
+	import { onMount } from 'svelte';
+	import UrlInput from './UrlInput.svelte';
+	import ImagePreview from './ImagePreview.svelte';
+	import EngineSelector from './EngineSelector.svelte';
+	import { engines } from './engines';
+	import { launchSearches, buildSearchLinks } from './search-launcher';
+
+	let { onrendered }: { onrendered?: () => void } = $props();
 
 	let imageUrl = $state('');
 	let selectedEngineIds = $state<string[]>([]);
@@ -25,6 +28,10 @@
 	);
 
 	let canSearch = $derived(isValidUrl() && selectedEngines.length > 0);
+
+	onMount(() => {
+		onrendered?.();
+	});
 
 	function handleSearch() {
 		if (!canSearch) return;
@@ -53,7 +60,6 @@
 </script>
 
 <div class="widget">
-	<!-- Header -->
 	<header>
 		<div class="title-row">
 			<div class="logo-mark">
@@ -69,25 +75,21 @@
 		</div>
 	</header>
 
-	<!-- Input -->
 	<section class="section">
 		<p class="instruction">Collez l'URL d'une image publique, sélectionnez vos moteurs et lancez la recherche. Aucune donnée n'est stockée.</p>
 		<UrlInput bind:value={imageUrl} onsubmit={handleSearch} />
 	</section>
 
-	<!-- Preview -->
 	{#if imageUrl}
 		<section class="section">
 			<ImagePreview url={imageUrl} />
 		</section>
 	{/if}
 
-	<!-- Engines -->
 	<section class="section">
 		<EngineSelector bind:selected={selectedEngineIds} />
 	</section>
 
-	<!-- Actions -->
 	<section class="actions">
 		<button class="search-btn" onclick={handleSearch} disabled={!canSearch}>
 			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -102,7 +104,6 @@
 		{/if}
 	</section>
 
-	<!-- Results -->
 	{#if searchResult}
 		<section class="section">
 			{#if searchResult.opened > 0}
@@ -154,7 +155,6 @@
 		padding: 28px 24px 36px;
 	}
 
-	/* Header */
 	header {
 		margin-bottom: 24px;
 	}
@@ -193,7 +193,6 @@
 		margin: 2px 0 0;
 	}
 
-	/* Sections */
 	.section {
 		margin-bottom: 20px;
 	}
@@ -206,7 +205,6 @@
 		line-height: 1.6;
 	}
 
-	/* Actions */
 	.actions {
 		display: flex;
 		gap: 10px;
@@ -268,7 +266,6 @@
 		transform: scale(0.97);
 	}
 
-	/* Results */
 	.result {
 		padding: 14px 16px;
 		border-radius: var(--radius-md);
