@@ -1,0 +1,99 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+
+	let { children } = $props();
+
+	onMount(async () => {
+		const pym = await import('pym.js');
+		const child = new pym.Child({ polling: 500 });
+		child.sendHeight();
+
+		const ro = new ResizeObserver(() => {
+			child.sendHeight();
+		});
+		ro.observe(document.body);
+
+		return () => ro.disconnect();
+	});
+</script>
+
+{@render children()}
+
+<style>
+	:global(*) {
+		box-sizing: border-box;
+	}
+
+	:global(html), :global(body) {
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		overflow-x: hidden;
+		font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	/* Dark mode (default) */
+	:global(html), :global(body) {
+		background-color: #001324;
+		color: #F0F0F1;
+	}
+
+	:global(:root) {
+		--bg: #001324;
+		--surface: #0a2a40;
+		--surface-hover: #123550;
+		--surface-active: #1a4060;
+		--border: rgba(255, 255, 255, 0.12);
+		--border-light: rgba(255, 255, 255, 0.08);
+		--text: #F0F0F1;
+		--text-secondary: rgba(240, 240, 241, 0.75);
+		--text-muted: rgba(240, 240, 241, 0.55);
+		--accent: #4A90E2;
+		--accent-hover: #5BA0F0;
+		--accent-light: rgba(74, 144, 226, 0.15);
+		--accent-text: #ffffff;
+		--error: #FF6B6B;
+		--error-light: rgba(255, 107, 107, 0.12);
+		--success: #4ECB71;
+		--success-light: rgba(78, 203, 113, 0.12);
+		--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+		--shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+		--shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+		--radius-sm: 6px;
+		--radius-md: 10px;
+		--radius-lg: 14px;
+	}
+
+	/* Light mode */
+	@media (prefers-color-scheme: light) {
+		:global(html), :global(body) {
+			background-color: #F7F8FB;
+			color: #2E3238;
+		}
+
+		:global(:root) {
+			--bg: #F7F8FB;
+			--surface: #ffffff;
+			--surface-hover: #eef0f4;
+			--surface-active: #dce0e5;
+			--border: rgba(46, 50, 56, 0.15);
+			--border-light: rgba(46, 50, 56, 0.08);
+			--text: #2E3238;
+			--text-secondary: rgba(46, 50, 56, 0.72);
+			--text-muted: rgba(46, 50, 56, 0.45);
+			--accent: #1a6dd6;
+			--accent-hover: #1558b0;
+			--accent-light: rgba(26, 109, 214, 0.08);
+			--accent-text: #ffffff;
+			--error: #d63031;
+			--error-light: rgba(214, 48, 49, 0.08);
+			--success: #27ae60;
+			--success-light: rgba(39, 174, 96, 0.08);
+			--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+			--shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+			--shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+		}
+	}
+</style>

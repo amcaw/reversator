@@ -1,12 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import UrlInput from './UrlInput.svelte';
-	import ImagePreview from './ImagePreview.svelte';
-	import EngineSelector from './EngineSelector.svelte';
-	import { engines } from './engines';
-	import { launchSearches, buildSearchLinks } from './search-launcher';
-
-	let { onrendered }: { onrendered?: () => void } = $props();
+	import UrlInput from '$lib/UrlInput.svelte';
+	import ImagePreview from '$lib/ImagePreview.svelte';
+	import EngineSelector from '$lib/EngineSelector.svelte';
+	import { engines } from '$lib/engines';
+	import { launchSearches, buildSearchLinks } from '$lib/search-launcher';
 
 	let imageUrl = $state('');
 	let selectedEngineIds = $state<string[]>([]);
@@ -28,10 +25,6 @@
 	);
 
 	let canSearch = $derived(isValidUrl() && selectedEngines.length > 0);
-
-	onMount(() => {
-		onrendered?.();
-	});
 
 	function handleSearch() {
 		if (!canSearch) return;
