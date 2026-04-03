@@ -3,14 +3,14 @@
  * Call initPym() in onMount, then sendHeight() after any DOM change.
  */
 import { onMount } from 'svelte';
-import pym from 'pym.js';
 
-let pymChild: InstanceType<typeof pym.Child> | null = null;
+let pymChild: { sendHeight: () => void } | null = null;
 
 export function initPym() {
-    onMount(() => {
+    onMount(async () => {
         if (typeof window !== 'undefined') {
-            pymChild = new pym.Child({ polling: 500 });
+            const pym = await import('pym.js');
+            pymChild = new pym.default.Child({ polling: 500 });
         }
     });
 }
