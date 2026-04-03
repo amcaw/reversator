@@ -13,7 +13,7 @@ export const engines: Engine[] = [
 		id: 'google-lens',
 		name: 'Google Lens',
 		logo: `${base}logos/google-lens.svg`,
-		buildUrl: (url) => `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(url)}`,
+		buildUrl: (url) => `https://www.google.com/searchbyimage?sbisrc=cr_1_5_2&image_url=${encodeURIComponent(url)}`,
 		enabledByDefault: true
 	},
 	{
@@ -21,7 +21,7 @@ export const engines: Engine[] = [
 		name: 'Google Fact Check',
 		logo: `${base}logos/google-factcheck.svg`,
 		buildUrl: (url) => `https://toolbox.google.com/factcheck/explorer/search/image_url:${encodeURIComponent(url)}`,
-		enabledByDefault: false
+		enabledByDefault: true
 	},
 	{
 		id: 'bing',

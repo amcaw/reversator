@@ -3,7 +3,7 @@
 
 	let { selected = $bindable<string[]>([]) }: { selected: string[] } = $props();
 
-	const STORAGE_KEY = 'reversator-engines';
+	const STORAGE_KEY = 'reversator-engines-v2';
 
 	try {
 		const stored = localStorage.getItem(STORAGE_KEY);
