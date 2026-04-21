@@ -4,6 +4,7 @@
 	import { engines } from '$lib/engines';
 
 	let imageUrl = $state('');
+	let prevReady = $state(false);
 
 	let isValidUrl = $derived(() => {
 		try {
@@ -15,6 +16,14 @@
 	});
 
 	let ready = $derived(isValidUrl());
+
+	// Auto-open all engines as soon as the URL becomes valid
+	$effect(() => {
+		if (ready && !prevReady) {
+			openAll();
+		}
+		prevReady = ready;
+	});
 
 	function openEngine(engineId: string) {
 		const engine = engines.find((e) => e.id === engineId);
@@ -28,14 +37,9 @@
 			window.open(engine.buildUrl(imageUrl), '_blank', 'noopener,noreferrer');
 		}
 	}
-
-	function reset() {
-		imageUrl = '';
-	}
 </script>
 
 <div class="widget">
-
 	<p class="instruction">Collez l'URL d'une image publique, puis lancez la recherche sur chaque moteur.</p>
 
 	<UrlInput bind:value={imageUrl} />
@@ -58,13 +62,6 @@
 	<div class="engines" class:disabled={!ready}>
 		<div class="engines-header">
 			<h2>Voir les résultats sur</h2>
-			<div class="engines-actions">
-				{#if imageUrl}
-					<button class="text-btn" onclick={reset}>Effacer</button>
-					<span class="sep">·</span>
-				{/if}
-				<button class="text-btn accent" onclick={openAll} disabled={!ready}>Tout ouvrir</button>
-			</div>
 		</div>
 
 		<div class="engine-grid">
@@ -80,6 +77,15 @@
 				</button>
 			{/each}
 		</div>
+
+		<button class="open-all-btn" onclick={openAll} disabled={!ready}>
+			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+				<polyline points="15 3 21 3 21 9"></polyline>
+				<line x1="10" y1="14" x2="21" y2="3"></line>
+			</svg>
+			Tout ouvrir
+		</button>
 	</div>
 </div>
 
@@ -125,6 +131,9 @@
 
 	/* Engines */
 	.engines {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
 		transition: opacity 0.2s;
 	}
 
@@ -134,10 +143,7 @@
 	}
 
 	.engines-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 6px;
+		margin-bottom: 2px;
 	}
 
 	h2 {
@@ -149,47 +155,7 @@
 		margin: 0;
 	}
 
-	.engines-actions {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-	}
-
-	.text-btn {
-		background: none;
-		border: none;
-		font-family: inherit;
-		font-size: 11px;
-		font-weight: 600;
-		color: var(--text-muted);
-		cursor: pointer;
-		padding: 2px 4px;
-		border-radius: var(--radius-sm);
-		transition: all 0.15s;
-	}
-
-	.text-btn:hover:not(:disabled) {
-		color: var(--text);
-	}
-
-	.text-btn.accent {
-		color: var(--accent);
-	}
-
-	.text-btn.accent:hover:not(:disabled) {
-		background: var(--accent-light);
-	}
-
-	.text-btn:disabled {
-		cursor: not-allowed;
-	}
-
-	.sep {
-		color: var(--text-muted);
-		font-size: 10px;
-	}
-
-	/* Engine grid — 2 columns on wide, 1 on narrow */
+	/* Individual engine cards */
 	.engine-grid {
 		display: flex;
 		flex-direction: column;
@@ -236,9 +202,6 @@
 		font-size: 12px;
 		font-weight: 600;
 		color: var(--text);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 
 	.open-icon {
@@ -251,4 +214,37 @@
 		color: var(--accent);
 	}
 
+	/* Tout ouvrir — prominent full-width button */
+	.open-all-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 7px;
+		width: 100%;
+		padding: 11px;
+		font-family: inherit;
+		font-size: 13px;
+		font-weight: 700;
+		background: var(--accent);
+		color: var(--accent-text);
+		border: none;
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: all 0.15s;
+		margin-top: 4px;
+	}
+
+	.open-all-btn:hover:not(:disabled) {
+		background: var(--accent-hover);
+		box-shadow: var(--shadow-md);
+	}
+
+	.open-all-btn:active:not(:disabled) {
+		transform: scale(0.98);
+	}
+
+	.open-all-btn:disabled {
+		opacity: 0.35;
+		cursor: not-allowed;
+	}
 </style>
